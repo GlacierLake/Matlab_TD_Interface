@@ -280,21 +280,61 @@ classdef td
                 'optionType',optionType,td.web_options);
             end
         end
-        function pricehistory = getPriceHistory(symbol,periodType,frequencyType,frequency,endDate,startDate,needExtendedHoursData)
+        function pricehistory = getPriceHistory(symbol,periodType,frequencyType,frequency,dateSpecifier,date,needExtendedHoursData)
+        %Get price history for a symbol
+        %periodType[string]: The type of period to show. Valid values are
+        %   'day', 'month', 'year', or 'ytd'
+        %period [string]: The number of periods to show: Valid periods by 
+        %   type:
+        %           day: 1,2,3,4,5,10
+        %           month: 1,2,3,6
+        %           year: 1,2,3,5,10,15,20
+        %           ytd: 1
+        %frequencyType[string]: The type of frequency with which a new 
+        %   candle is formed. Valid frequencyTypes by periodTypes:
+        %       day: minute
+        %       month: daily, weekly
+        %       year: daily, weekly, monthly
+        %       ytd: daily, weekly
+        %frequency[string]: The number of the frequencyType to be included
+        %   in each candle. Valid frequencies by frequencyType:
+        %       minute: 1,5,10,15,30
+        %       daily: 1
+        %       weekly: 1
+        %       monthly: 1
+        %dateSpecifier[string]: For period specified n periods before
+        %   'endDate' or 'startDate'
+        %date[string]: Date in milliseconds since epoch as determined by 
+        %   dateSpecifier
+        %needExtendedHoursData[string]: 'true' to return extended hours 
+        %   data, 'false' for regular market hours only
             url = ['https://api.tdameritrade.com/v1/marketdata/',symbol,'/pricehistory'];
             
+            if dateSpecifier == "endDate"
             pricehistory = webread(url,...
                 'apikey',td.client_id,...
                 'periodType',periodType,...
                 'period',period,...
                 'frequencyType',frequencyType,...
                 'frequency',frequency,...
-                'endDate',endDate,...
-                'startDate',startDate,...
+                'endDate',date,...
                 'needExtendedHoursData',needExtendedHoursData,...
                 td.web_options);
+            elseif dateSpecifier == "startDate"
+                pricehistory = webread(url,...
+                'apikey',td.client_id,...
+                'periodType',periodType,...
+                'period',period,...
+                'frequencyType',frequencyType,...
+                'frequency',frequency,...
+                'startDate',date,...
+                'needExtendedHoursData',needExtendedHoursData,...
+                td.web_options);
+            end
         end
         function quote = getQuote(symbol)
+        %Get quote for a symbol
+        %symbol[string]: Enter one symbol(case-sensitive)
             url = ['https://api.tdameritrade.com/v1/marketdata/',symbol,'/quotes'];
             
             quote = webread(url,...
@@ -302,11 +342,78 @@ classdef td
                 td.web_options);
         end
         function quotes = getQuotes(symbol)
+        %Get quote for one or more symbols
+        %symbol[string]: Enter one or more symbols separated by commas
             url = 'https://api.tdameritrade.com/v1/marketdata/quotes';
             
             quotes = webread(url,...
                 'apikey',td.client_id,...
                 'symbol',symbol,...
+                td.web_options);
+        end
+        function transaction = getTransaction(accountId,transactionId)
+        %Transaction for a specific account
+        %accountId[string]: Account Number
+        %transactionId[string]: Transaction ID
+            url = ['https://api.tdameritrade.com/v1/accounts/', accountId,'/transactions/', transactionId];
+            
+            transaction = webread(url,td.web_options);
+        end
+        function transactions = getTransactions(accountId,type,symbol,startDate,endDate)
+        %Transactions for a specific account.
+        %accountId[string]: Account Number
+        %type[string]: 'ALL', 'TRADE', 'BUY_ONLY', 'SELL_ONLY',
+        %   'CASH_IN_OR_CASH_OUT', 'CHECKING', 'DIVIDEND', 'INTEREST',
+        %   'OTHER', 'ADVISOR_FEES'
+        %symbol[string]: Only transactions with the specified symbol will
+        %   returned
+        %startDate[string]: Only transactions after the Start Date will be
+        %   returned. Note: The maximum date range is one year. Valid
+        %   ISO-8601 formats are: yyyy-MM-dd
+        %endDate[string]: Only transactions before the End Date will be
+        %   returned. Note: The maximum date range is one year. Valid
+        %   ISO-8601 formats are: yyyy-MM-dd
+            url = ['https://api.tdameritrade.com/v1/accounts/', accountId, '/transactions'];
+            
+            transactions = webread(url,...
+                'type',type,...
+                'symbol',symbol,...
+                'startDate',startDate,...
+                'endDate',endDate,...
+                td.web_options);
+        end
+        function preferences = getPreferences(accountId)
+        %Preferences for a specific account
+        %accountId[string]: Account ID
+            url = ['https://api.tdameritrade.com/v1/accounts/',accountId, 'preferences'];
+            
+            preferences = webread(url, td.web_options);
+        end
+        function keys = getStreamerSubscriptionKeys(accountIds)
+        %SubscriptionKey for provided accounts or default accounts.
+        %accountIds[string]: A comma separated string of account IDs, to
+        %   fetch subscription keys for each of them.
+            url = 'https://api.tdameritrade.com/v1/userprincipals/streamersubscriptionkeys';
+            
+            keys = webread(url,...
+                'accountIds',accountIds,...
+                td.web_options);
+        end
+        function userPrincipals = getUserPrincipals(fields)
+        %User Principal details
+        %fields[string]: A comma separated String which allows one to
+        %   specify additional fields to return. Possible values in this
+        %   String can be:
+        %       'streamerSubscriptionKeys'
+        %       'streamerConnectionInfo'
+        %       'preferences'
+        %       'surrogateIds'
+        %   Example:
+        %       fields=streamerSubscriptionKeys,streamerConnectionInfo
+            url = 'https://api.tdameritrade.com/v1/userprincipals';
+            
+            userPrincipals = webread(url,...
+                'fields',fields,...
                 td.web_options);
         end
     end
