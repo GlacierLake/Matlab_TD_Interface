@@ -1,13 +1,20 @@
 classdef td
     properties (Constant, Access = private)
-        client_id = ' ';
-        refresh_token = ' '; 
-        callback_url = ' '
-        account_id = ' ';
+        client_id = td.credentials.ConsumerKey;
+        refresh_token = td.credentials.RefreshToken; 
+        callback_url = td.credentials.CallbackURL;
+        credentials = td.credentialsreader();
         web_options = td.start()
         
     end
     methods(Static, Access = private)         
+        function credentials = credentialsreader()
+            fid = fopen('credentials.json');
+            raw = fread(fid,inf);
+            str = char(raw');
+            fclose(fid);
+            credentials = jsondecode(str);
+        end
         function web_options = start()
             
             urlrefresh_token = urlencode(td.refresh_token);
@@ -28,6 +35,7 @@ classdef td
             HeaderFields = {'Authorization',['Bearer ',access_token]};
             web_options = weboptions('HeaderFields',HeaderFields,'ContentType','json');
         end
+        
      end
     methods(Static) 
         function [instrument_search] = search(search_details, search_type)
@@ -43,7 +51,7 @@ classdef td
             url = ['https://api.tdameritrade.com/v1/instruments/',search_details];
             
             cusip_search = webread(url,...
-                'apikey',td.client_id,...
+                'apikey=',td.client_id,...
                 td.web_options);
         end
         function markethours = multipleMarketHours(search)
