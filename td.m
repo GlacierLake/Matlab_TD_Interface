@@ -280,8 +280,9 @@ classdef td
                 'optionType',optionType,td.web_options);
             end
         end
-        function pricehistory = getPriceHistory(symbol,periodType,frequencyType,frequency,dateSpecifier,date,needExtendedHoursData)
+        function pricehistory = getPriceHistory(symbol,periodType,period,frequencyType,frequency,dateSpecifier,date,needExtendedHoursData)
         %Get price history for a symbol
+        %symbol[string]:symbol you would like to enter
         %periodType[string]: The type of period to show. Valid values are
         %   'day', 'month', 'year', or 'ytd'
         %period [string]: The number of periods to show: Valid periods by 
