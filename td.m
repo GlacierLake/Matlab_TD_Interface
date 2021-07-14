@@ -4,10 +4,26 @@ classdef td
         refresh_token = td.credentials.RefreshToken; 
         callback_url = td.credentials.CallbackURL;
         credentials = td.credentialsreader();
-        web_options = td.start()
-        
+        %td.start();
+        %refresh_time = ((datetime('now'))+2/24/4)
     end
-    methods(Static, Access = private)         
+    methods(Static = true, Access = private)
+
+        function webOptions = web_options()
+            persistent current_refresh_time;
+            persistent current_web_options;
+            if isdatetime(current_refresh_time)==0
+                current_refresh_time = datetime('yesterday');
+            end
+            if current_refresh_time < datetime('now')
+               [current_refresh_time,new_web_options] = td.start();
+                    current_web_options = new_web_options;
+            elseif isdatetime(current_refresh_time) == 0
+                    [current_refresh_time,new_web_options] = td.start();
+                    current_web_options = new_web_options;
+            end
+            webOptions = current_web_options;
+        end
         function credentials = credentialsreader()
             fid = fopen('credentials.json');
             raw = fread(fid,inf);
@@ -15,8 +31,7 @@ classdef td
             fclose(fid);
             credentials = jsondecode(str);
         end
-        function web_options = start()
-            
+        function [refresh_time,web_options] = start()
             urlrefresh_token = urlencode(td.refresh_token);
             url = 'https://api.tdameritrade.com/v1/oauth2/token';
 
@@ -30,10 +45,11 @@ classdef td
 
             response = webwrite(url,data);
             access_token = response.access_token;
-            %refresh_time = ((datetime('now'))+2/24/4); 
+            refresh_time = ((datetime('now'))+2/24/4); 
             
             HeaderFields = {'Authorization',['Bearer ',access_token]};
             web_options = weboptions('HeaderFields',HeaderFields,'ContentType','json');
+
         end
         
      end
